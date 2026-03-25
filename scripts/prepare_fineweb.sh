@@ -46,14 +46,17 @@ fi
 mkdir -p "$OUTPUT_DIR"
 
 # ── step 1: download FineWeb and write per-split JSONL ───────────────────────
-echo "[1/3] Downloading FineWeb (${NUM_SAMPLES} samples) and writing JSONL..."
 
 # Train / valid / test split: 98% / 1% / 1%
 TRAIN_SAMPLES=$(( NUM_SAMPLES * 98 / 100 ))
 VALID_SAMPLES=$(( NUM_SAMPLES *  1 / 100 ))
 TEST_SAMPLES=$(( NUM_SAMPLES - TRAIN_SAMPLES - VALID_SAMPLES ))
 
-python3 - <<EOF
+if [[ -f "$OUTPUT_DIR/fineweb_train.jsonl" && -f "$OUTPUT_DIR/fineweb_valid.jsonl" && -f "$OUTPUT_DIR/fineweb_test.jsonl" ]]; then
+  echo "[1/3] JSONL files already exist, skipping download."
+else
+  echo "[1/3] Downloading FineWeb (${NUM_SAMPLES} samples) and writing JSONL..."
+  python3 - <<EOF
 import json
 from datasets import load_dataset
 
@@ -97,7 +100,10 @@ for h in handles.values():
 
 for split, count in counts.items():
     print(f"  {split}: {count:,} docs written")
+
+import os as _os; _os._exit(0)
 EOF
+fi
 
 # ── step 2: tokenize each split ──────────────────────────────────────────────
 echo "[2/3] Tokenizing with preprocess_data.py..."

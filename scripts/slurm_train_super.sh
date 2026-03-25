@@ -17,10 +17,10 @@
 # ==============================================================================
 
 # Directory produced by scripts/prepare_fineweb.sh --output <this dir>
-DATA_DIR=/path/to/data/fineweb
+DATA_DIR=/scratch/hpc-prf-merlin/luke/Megatron-Bridge/data/fineweb
 
 # Where to save checkpoints
-CHECKPOINT_DIR=/path/to/checkpoints
+CHECKPOINT_DIR=/scratch/hpc-prf-merlin/luke/Megatron-Bridge/checkpoints
 
 # Optional: set tokens if not already in your environment
 # export HF_TOKEN="hf_..."
