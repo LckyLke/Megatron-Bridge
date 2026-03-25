@@ -43,6 +43,7 @@ SAVE_INTERVAL=1000
 # ==============================================================================
 
 mkdir -p logs
+mkdir -p "$CHECKPOINT_DIR"
 
 module load tools/Apptainer/1.3.5-GCCcore-13.3.0
 
@@ -62,7 +63,6 @@ export NCCL_NVLS_ENABLE=0
 apptainer exec \
     --nv \
     --no-home \
-    --writable-tmpfs \
     --bind "$PWD":/opt/Megatron-Bridge \
     --bind "$DATA_DIR":"$DATA_DIR" \
     --bind "$CHECKPOINT_DIR":"$CHECKPOINT_DIR" \
