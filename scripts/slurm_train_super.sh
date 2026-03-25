@@ -22,9 +22,8 @@ DATA_DIR=/scratch/hpc-prf-merlin/luke/Megatron-Bridge/data/fineweb
 # Where to save checkpoints
 CHECKPOINT_DIR=/scratch/hpc-prf-merlin/luke/Megatron-Bridge/checkpoints
 
-# Optional: set tokens if not already in your environment
-# export HF_TOKEN="hf_..."
-# export WANDB_API_KEY="..."
+# Required for WandB logging — get your key from https://wandb.ai/authorize
+export WANDB_API_KEY="YOUR_KEY_HERE"
 
 # ==============================================================================
 # Derived paths — do not edit
