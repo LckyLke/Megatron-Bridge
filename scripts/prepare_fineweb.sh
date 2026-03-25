@@ -130,9 +130,9 @@ import json, os
 
 output_dir = "${OUTPUT_DIR}"
 blend = {
-    "train": ["1.0", os.path.join(output_dir, "fineweb_train")],
-    "valid": ["1.0", os.path.join(output_dir, "fineweb_valid")],
-    "test":  ["1.0", os.path.join(output_dir, "fineweb_test")],
+    "train": ["1.0", os.path.join(output_dir, "fineweb_train_text_document")],
+    "valid": ["1.0", os.path.join(output_dir, "fineweb_valid_text_document")],
+    "test":  ["1.0", os.path.join(output_dir, "fineweb_test_text_document")],
 }
 path = os.path.join(output_dir, "blend.json")
 with open(path, "w") as f:
