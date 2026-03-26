@@ -169,7 +169,8 @@ def main():
     apply_overrides(cfg, final_overrides, excluded_fields)
 
     # Initialize distributed and model parallel
-    state = GlobalState(cfg)
+    state = GlobalState()
+    state.cfg = cfg
     initialize_megatron(cfg=cfg)
 
     # Build model
