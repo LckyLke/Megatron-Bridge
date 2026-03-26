@@ -38,9 +38,10 @@ from megatron.bridge.recipes.nemotronh.nemotron_3_super import (
     nemotron_3_super_pretrain_config as pretrain_config,
 )
 from megatron.bridge.training.config import ConfigContainer, runtime_config_update
-from megatron.bridge.training.setup import setup, initialize_megatron
+from megatron.bridge.training.setup import setup, initialize_megatron, _validate_and_set_vocab_size
 from megatron.bridge.training.state import GlobalState
 from megatron.bridge.training.checkpointing import load_checkpoint
+from megatron.bridge.training.tokenizers.tokenizer import build_tokenizer
 from megatron.bridge.training.utils.omegaconf_utils import (
     apply_overrides,
     create_omegaconf_dict_config,
@@ -82,12 +83,12 @@ def forward_step(data_iterator, model, **kwargs):
     return model(**forward_args), loss_func
 
 
-def generate(model, tokenizer, prompt, max_new_tokens=100):
+def generate(model, hf_tokenizer, prompt, max_new_tokens=100):
     """Greedy generation loop."""
-    input_ids = tokenizer.encode(prompt, return_tensors="pt").cuda()
+    input_ids = hf_tokenizer.encode(prompt, return_tensors="pt").cuda()
     generated_ids = input_ids.clone()
 
-    stop_tokens = [tokenizer.eos_token_id]
+    stop_tokens = [hf_tokenizer.eos_token_id]
 
     for step in range(max_new_tokens):
         position_ids = (
@@ -132,7 +133,7 @@ def generate(model, tokenizer, prompt, max_new_tokens=100):
             if next_token_ids.item() in stop_tokens:
                 break
 
-    return tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+    return hf_tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
 
 def parse_cli_args():
@@ -181,6 +182,13 @@ def main():
     state.cfg = cfg
     initialize_megatron(cfg=cfg)
 
+    # Build tokenizer and set vocab_size (required before model creation)
+    tokenizer = build_tokenizer(cfg.tokenizer)
+    cfg.model.vocab_size, cfg.model.should_pad_vocab = _validate_and_set_vocab_size(
+        model_vocab_size=cfg.model.vocab_size,
+        tokenizer_vocab_size=tokenizer.vocab_size,
+    )
+
     # Build model
     model = cfg.model.provide_distributed_model(wrap_with_ddp=False)
 
@@ -196,15 +204,15 @@ def main():
     for m in model:
         m.eval()
 
-    # Initialize tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer.tokenizer_model, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    # Get HF tokenizer for encode/decode (the megatron tokenizer wraps it)
+    hf_tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer.tokenizer_model, trust_remote_code=True)
+    if hf_tokenizer.pad_token is None:
+        hf_tokenizer.pad_token = hf_tokenizer.eos_token
 
     # Generation loop
     if args.prompt:
         # Single prompt mode
-        result = generate(model, tokenizer, args.prompt, args.max_new_tokens)
+        result = generate(model, hf_tokenizer, args.prompt, args.max_new_tokens)
         print_rank_0(f"\n{'='*60}")
         print_rank_0(f"Prompt: {args.prompt}")
         print_rank_0(f"Generated: {result}")
@@ -244,7 +252,7 @@ def main():
             if prompt is None:
                 prompt = "".join(chr(c) for c in prompt_tensor.tolist())
 
-            result = generate(model, tokenizer, prompt, args.max_new_tokens)
+            result = generate(model, hf_tokenizer, prompt, args.max_new_tokens)
             print_rank_0(f"\n{result}\n")
 
     if torch.distributed.is_initialized():
