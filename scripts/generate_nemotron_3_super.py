@@ -189,12 +189,11 @@ def main():
         tokenizer_vocab_size=tokenizer.vocab_size,
     )
 
+    # Disable MTP before building the model so MTP layers are not created
+    cfg.model.mtp_num_layers = 0
+
     # Build model
     model = cfg.model.provide_distributed_model(wrap_with_ddp=False)
-
-    # Disable MTP for inference
-    for m in model:
-        m.config.mtp_num_layers = None
 
     # Load checkpoint
     print_rank_0(f"Loading checkpoint from: {cfg.checkpoint.load}")
