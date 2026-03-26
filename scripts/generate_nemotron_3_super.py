@@ -37,7 +37,7 @@ from transformers import AutoTokenizer
 from megatron.bridge.recipes.nemotronh.nemotron_3_super import (
     nemotron_3_super_pretrain_config as pretrain_config,
 )
-from megatron.bridge.training.config import ConfigContainer
+from megatron.bridge.training.config import ConfigContainer, runtime_config_update
 from megatron.bridge.training.setup import setup, initialize_megatron
 from megatron.bridge.training.state import GlobalState
 from megatron.bridge.training.checkpointing import load_checkpoint
@@ -167,6 +167,9 @@ def main():
 
     final_overrides = OmegaConf.to_container(merged_omega_conf, resolve=True)
     apply_overrides(cfg, final_overrides, excluded_fields)
+
+    # Apply runtime config (computes data_parallel_size, resolves precision, etc.)
+    runtime_config_update(cfg)
 
     # Initialize distributed and model parallel
     state = GlobalState()
