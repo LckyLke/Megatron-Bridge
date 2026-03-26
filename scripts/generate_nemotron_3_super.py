@@ -198,7 +198,7 @@ def main():
 
     # Load checkpoint
     print_rank_0(f"Loading checkpoint from: {cfg.checkpoint.load}")
-    load_checkpoint(model, None, None, state)
+    load_checkpoint(state, model, None, None)
 
     model = [m.cuda() for m in model]
     for m in model:
