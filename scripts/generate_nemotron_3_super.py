@@ -195,6 +195,9 @@ def main():
     # Build model
     model = cfg.model.provide_distributed_model(wrap_with_ddp=False)
 
+    # Print model architecture
+    print_rank_0(model[0])
+
     # Load checkpoint
     print_rank_0(f"Loading checkpoint from: {cfg.checkpoint.load}")
     load_checkpoint(state, model, None, None)
