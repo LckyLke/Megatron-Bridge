@@ -154,6 +154,11 @@ def main():
     if cli_overrides:
         merged_omega_conf = parse_hydra_overrides(merged_omega_conf, cli_overrides)
 
+    # Sync dataset.sequence_length to match model.seq_length if overridden
+    model_seq_length = OmegaConf.select(merged_omega_conf, "model.seq_length", default=None)
+    if model_seq_length is not None:
+        OmegaConf.update(merged_omega_conf, "dataset.sequence_length", model_seq_length)
+
     # Force inference-friendly settings
     merged_omega_conf = OmegaConf.merge(
         merged_omega_conf,
